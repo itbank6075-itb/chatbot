@@ -20,6 +20,7 @@ from openai import APIConnectionError, APIStatusError, AuthenticationError, Rate
 from pydantic import BaseModel, Field, ValidationError
 from pypdf import PdfReader
 import streamlit as st
+from streamlit.errors import StreamlitSecretNotFoundError
 
 # 실행한 위치와 관계없이 app.py 옆의 DATA와 .env를 사용합니다.
 ROOT = Path(__file__).resolve().parent
@@ -57,7 +58,20 @@ class Index:
 
 
 def read_api_key() -> str:
-    # 시스템에 저장된 다른 키 대신 사용자가 요청한 .env 파일에서 직접 읽습니다.
+    # 배포 환경에서는 Streamlit Cloud 설정 화면의 Secrets를 먼저 사용합니다.
+    # 실제 키는 코드나 GitHub 저장소에 작성하지 않습니다.
+    try:
+        secret = st.secrets.get("OPENAI_API_KEY")
+    except StreamlitSecretNotFoundError as exc:
+        if getattr(exc, "error_id", None) != "no-secrets-found":
+            # 설정 원문이나 키가 오류 메시지에 노출되지 않도록 안내만 전달합니다.
+            raise ValueError("Streamlit Secrets의 TOML 설정을 확인해주세요.") from None
+        secret = None
+    if secret is not None:
+        if not isinstance(secret, str):
+            raise ValueError("Secrets의 OPENAI_API_KEY는 따옴표로 감싼 문자열이어야 합니다.")
+        return secret.strip()
+    # 로컬 개발에서는 기존 .env 사용 방식을 유지합니다.
     values = dotenv_values(ROOT / ".env", encoding="utf-8-sig")
     return (values.get("OPENAI_API_KEY") or "").strip()
 
@@ -262,7 +276,7 @@ def render_answer(message: dict) -> None:
 def show_api_error(exc: Exception) -> None:
     # 예외 원문에는 인증 정보가 포함될 수 있으므로 화면에는 안내만 표시합니다.
     if isinstance(exc, AuthenticationError):
-        st.error("OpenAI 인증에 실패했습니다. .env의 OPENAI_API_KEY를 확인해주세요.")
+        st.error("OpenAI 인증에 실패했습니다. Cloud Secrets 또는 로컬 .env의 OPENAI_API_KEY를 확인해주세요.")
     elif isinstance(exc, RateLimitError):
         st.error("OpenAI 요청 한도 또는 잔액을 확인한 뒤 다시 시도해주세요.")
     elif isinstance(exc, APIConnectionError):
@@ -393,9 +407,13 @@ def main() -> None:
     if validate_clicked and not live_validation and cached_index is None:
         # PDF 자체 검사는 API 키나 잔액이 없어도 실행할 수 있습니다.
         st.stop()
-    api_key = read_api_key()
+    try:
+        api_key = read_api_key()
+    except ValueError:
+        st.error('Cloud Secrets에 OPENAI_API_KEY = "실제 API 키" 형식으로 설정해주세요. 로컬 Secrets를 사용하는 경우 TOML 형식도 확인해주세요.')
+        st.stop()
     if not api_key:
-        st.info(".env 파일의 OPENAI_API_KEY= 뒤에 API 키를 넣고 저장해주세요.")
+        st.info("Cloud에서는 앱 설정의 Secrets에 OPENAI_API_KEY를 등록해주세요. 로컬에서는 .env 파일에 입력해주세요.")
         st.stop()
     # 같은 사용자 세션에서는 화면이 다시 실행되어도 벡터DB를 재사용합니다.
     signature = (revision, sha256(api_key.encode()).hexdigest())

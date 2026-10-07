@@ -36,7 +36,7 @@ from langchain_core.prompts import ChatPromptTemplate
 load_dotenv()
 ```
 
-Copy .env.example to .env and provide OPENAI_API_KEY before calling OpenAI.
+For local development, copy .env.example to .env and provide OPENAI_API_KEY. In Streamlit Cloud, register OPENAI_API_KEY in app Secrets.
 The environment check runs offline without reading or printing API keys.
 Create app.py when ready, then start Streamlit with:
 
@@ -59,7 +59,7 @@ Set-Alias uv "$env:USERPROFILE\.local\bin\uv.exe"
 uv run --locked streamlit run app.py
 ```
 
-- `.env`의 `OPENAI_API_KEY`를 읽습니다. 키를 화면이나 로그에 출력하지 않습니다.
+- Streamlit Secrets의 `OPENAI_API_KEY`를 우선 읽고, 설정이 없으면 로컬 `.env`를 읽습니다. 키를 화면이나 로그에 출력하지 않습니다.
 - `DATA`의 모든 하위 폴더를 읽으며 PDF, TXT, MD, CSV, JSON을 지원합니다.
 - 임베딩: `text-embedding-3-small`, 답변: `gpt-4o-mini`.
 - 벡터DB는 `InMemoryVectorStore`입니다. 재시작하거나 문서를 다시 읽으면 임베딩을 다시 생성합니다.
@@ -109,3 +109,32 @@ forbidden_terms는 잘못 들어가면 실패할 조건, expected_sources는 기
 문서 파일 해시가 바뀌면 기준 질문의 재검토가 필요하다고 표시합니다.
 검사 실패 시 CLI 종료 코드는 1, 설정/실행 오류는 2입니다. 검토 필요 항목은 실패와 구분합니다.
 "# chatbot" 
+
+
+## Streamlit Community Cloud 배포와 API 키
+
+1. 변경된 코드와 .gitignore를 GitHub main에 반영합니다. 실제 키는 커밋하지 않습니다.
+2. https://share.streamlit.io 에서 Create app을 선택합니다.
+3. Repository: `itbank6075-itb/chatbot`, Branch: `main`, Main file path: `app.py`.
+4. Advanced settings에서 Python 3.11을 선택합니다.
+5. 같은 화면의 Secrets 입력란에 다음 TOML을 넣습니다. 따옴표 안만 실제 키로 교체하세요.
+
+```toml
+OPENAI_API_KEY = "여기에 실제 OpenAI API 키 입력"
+```
+
+6. Save 후 Deploy합니다. 이미 배포한 앱은 앱 Settings의 Secrets에서 변경할 수 있습니다.
+
+로컬 .env와 .streamlit/secrets.toml은 Git에서 제외합니다. 실제 Secrets 파일은 이 프로젝트에 생성하지 않습니다.
+공개해도 되는 .env.example은 빈 키 항목만 포함합니다.
+기존 uv.lock과 pyproject.toml을 사용하므로 별도의 requirements.txt를 추가하지 않았습니다.
+Cloud에서는 uv.lock을 우선 인식합니다.
+
+현재 대화 기록은 프로젝트 전체 접속자가 공유하는 로컬 SQLite 구조입니다.
+개인별 대화가 필요한 공개 서비스로 운영하려면 사용자별 기록 분리가 필요합니다.
+SQLite 기록은 Cloud 로컬 파일이므로 재배포/컨테이너 교체 후 영구 보존을 보장하지 않습니다.
+
+공식 안내:
+- https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management
+- https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy
+- https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies

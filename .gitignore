@@ -5,3 +5,5 @@ __pycache__/
 .env.*
 !.env.example
 .chatbot/
+.streamlit/secrets.toml
+.streamlit/secrets.toml.*
