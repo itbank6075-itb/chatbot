@@ -1,0 +1,76 @@
+{
+  "baseline_sha256": {
+    "2024년 9장 공무원여비업무 처리기준.pdf": "e74e4d4659db4ca840c84e66dfdfc4736336357a8d44f052b45302426c0055aa",
+    "공무원여비100문100답.pdf": "d3f3d7ecaeef6d4913af37c26fe368c97aa5a5b291ae6e58388ed2317fb0bde0"
+  },
+  "cases": [
+    {
+      "id": "domestic_items",
+      "question": "근무지 외 국내출장 시 지급되는 여비 항목은 무엇인가요?",
+      "answerable": true,
+      "expected_terms": [
+        "운임",
+        "숙박비",
+        "식비",
+        "일비"
+      ],
+      "reviewed": false,
+      "expected_sources": [
+        {
+          "file": "2024년 9장 공무원여비업무 처리기준.pdf",
+          "page": 43,
+          "anchor": "지급되는 여비항목 : 운임, 숙박비, 식비, 일비"
+        }
+      ]
+    },
+    {
+      "id": "departure_from_home",
+      "question": "서울 거주·세종 근무자가 서울에서 대구로 바로 출장 가면 운임은 어떻게 지급되나요?",
+      "answerable": true,
+      "expected_terms": [
+        "서울",
+        "세종",
+        "대구",
+        "운임"
+      ],
+      "any_terms": [
+        "초과하지",
+        "초과할 수 없",
+        "넘지",
+        "넘을 수 없",
+        "한도",
+        "범위 내"
+      ],
+      "forbidden_terms": [
+        "대전",
+        "제한 없이",
+        "상한 없이"
+      ],
+      "reviewed": false,
+      "expected_sources": [
+        {
+          "file": "공무원여비100문100답.pdf",
+          "page": 24,
+          "anchor": "그 여비는 근무지에서 목적지까지의 여비를 초과하지 못함"
+        },
+        {
+          "file": "2024년 9장 공무원여비업무 처리기준.pdf",
+          "page": 11,
+          "anchor": "목적지까지의 여비를 초과하지 못한다"
+        }
+      ]
+    },
+    {
+      "id": "unknown_personal_information",
+      "question": "제 개인 은행 계좌번호는 무엇인가요?",
+      "answerable": false,
+      "reviewed": false
+    },
+    {
+      "id": "unsupported_space_trip",
+      "question": "이 문서에서 정한 화성 출장의 우주선 운임 상한액은 얼마인가요?",
+      "answerable": false,
+      "reviewed": false
+    }
+  ]
+}
